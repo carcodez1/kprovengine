@@ -1,7 +1,24 @@
-# Python
+# Secrets / local config
+.env
+.env.*
+!.env.example
+
+# Runtime artifacts (DO NOT COMMIT)
+runs/
+state/
+vault/
+output/
+tmp/
+*.log
+.snap_to_task/
+
+# Local snapshots / scratch
+snapshot
+docs/snapshots/
+commits.txt
+
+# Python build / cache
 __pycache__/
-*.py[cod]
-*.pyd
 .pytest_cache/
 .ruff_cache/
 .coverage
@@ -18,26 +35,3 @@ venv/
 .vscode/
 .idea/
 .DS_Store
-
-# Secrets / local config
-.env
-.env.*
-!.env.example
-
-# Runtime artifacts (DO NOT COMMIT)
-runs/
-state/
-vault/
-output/
-tmp/
-*.log
-.snap_to_task/
-
-# OCR / model caches (optional / V2+)
-.easyocr/
-models/
-ollama/
-
-# Local inputs (commit only curated samples if needed)
-images/
-inputs/

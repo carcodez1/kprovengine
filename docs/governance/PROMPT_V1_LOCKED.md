@@ -1,14 +1,14 @@
 # KProvEngine — Master Prompt (V1 LOCKED)
 
-Status: Locked  
-Effective: 2026-02-08  
+Status: Locked
+Effective: 2026-02-08
 Applies to: KProvEngine v1.x
 
 ---
 
 ## Purpose
 
-This document defines the development contract for KProvEngine V1.  
+This document defines the development contract for KProvEngine V1.
 Its goal is to prevent scope drift, over-claiming, and unsafe changes while
 the core engine is stabilized.
 
@@ -20,13 +20,13 @@ This is a process control document, not a product description.
 
 MODE: RELEASE (V1 LOCKED)
 
-Role:  
+Role:
 Principal Engineer & Release Manager
 
-Context:  
+Context:
 KProvEngine — local-first provenance engine for AI-assisted human work.
 
-Objective:  
+Objective:
 Deliver a public, defensible V1 suitable for GitHub, professional review,
 and senior-level technical discussion.
 
@@ -82,4 +82,3 @@ The following must not occur during V1:
 - File-level diffs or full file contents
 - Local and CI verification commands
 - Explicit **“Safe to push?”** decision (Yes / No, with blockers if No)
-

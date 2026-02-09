@@ -129,7 +129,7 @@ Attempting to install KProvEngine with Python 3.13+ will fail by design.
 
 ## Virtual Environments & PEP 668 (Important)
 
-On macOS, Homebrew Python is **externally managed** (PEP 668).  
+On macOS, Homebrew Python is **externally managed** (PEP 668).
 Do **not** install packages system-wide.
 
 Always use a virtual environment.

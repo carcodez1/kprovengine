@@ -1,6 +1,6 @@
 # KProvEngine — Review Gate (V1)
 
-Status: Active  
+Status: Active
 Applies to: All code changes in V1.x
 
 ---

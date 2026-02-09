@@ -1,6 +1,6 @@
 # KProvEngine — Developer Card (V1)
 
-Applies to: V1.x  
+Applies to: V1.x
 Purpose: fast re-entry + drift prevention
 
 ## What you are building (V1)
