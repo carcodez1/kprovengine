@@ -1,0 +1,13 @@
+[flake8]
+max-line-length = 100
+extend-ignore = E203,W503
+exclude =
+  .git,
+  .venv,
+  __pycache__,
+  .pytest_cache,
+  .snap_to_task,
+  build,
+  dist
+per-file-ignores =
+  tests/*:D
