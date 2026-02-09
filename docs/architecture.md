@@ -14,37 +14,42 @@ V1 principles:
 flowchart LR
   %% KProvEngine V1: pipeline + evidence flow (single-pass, local-first)
 
-  A[Input Artifacts\n(files, images, notes)] --> B[Normalize\n(deterministic)]
-  B --> C[Parse\n(format-aware)]
-  C --> D[Extract\n(structure)]
-  D --> E[Render\n(outputs)]
+  A["Input Artifacts<br/>(files, images, notes)"] --> B["Normalize<br/>(deterministic, local-only)"]
+  B --> C["Parse<br/>(format-aware, no inference)"]
+  C --> D["Extract<br/>(structural extraction)"]
+  D --> E["Render<br/>(outputs)"]
+  E --> R["Evidence Bundle<br/>(run directory)"]
 
   %% Optional adapters (non-authoritative)
-  subgraph AD[Adapters (Optional / Non-authoritative)]
-    O1[OCR Adapter\n(EasyOCR | Tesseract)] --> C
-    L1[LLM Adapter\n(Ollama | LangChain-in-adapter)] --> D
+  subgraph OPT["Adapters (Optional, Non-authoritative)"]
+    OCR["OCR Adapter<br/>(EasyOCR / Tesseract)"]
+    LLM["LLM Adapter<br/>(Ollama / LangChain)"]
   end
 
-  %% Evidence bundle produced from pipeline execution
-  E --> F[Evidence Bundle\n(run directory)]
-  subgraph EV[Evidence Artifacts (V1)]
-    M[manifest.json\n(SHA-256 manifest)]
-    P[provenance.json\n(execution metadata)]
-    T[toolchain.json\n(tool/version disclosure)]
-    H[human_review.json\n(PENDING allowed)]
-    X[hashes.txt\n(content hashes)]
-    A1[attestation.md\n(human statement)]
-    S[sbom.json\n(CI-generated when available)]
+  OCR -.-> C
+  OCR -.-> D
+  LLM -.-> D
+
+  %% Evidence artifacts (V1)
+  subgraph ART["Evidence Artifacts (V1)"]
+    M["manifest.json<br/>SHA-256 manifest"]
+    P["provenance.json<br/>execution metadata"]
+    T["toolchain.json<br/>tool/version disclosure"]
+    H["human_review.json<br/>PENDING allowed"]
+    X["hashes.txt<br/>content hashes"]
+    ATE["attestation.md<br/>human statement"]
+    S["sbom.json<br/>CI-generated when available"]
   end
 
-  F --> M
-  F --> P
-  F --> T
-  F --> H
-  F --> X
-  F --> A1
-  F --> S
+  R --> M
+  R --> P
+  R --> T
+  R --> H
+  R --> X
+  R --> ATE
+  R --> S
 
-  %% Explicit human-in-the-loop review
-  R[Human Reviewer] --> H
-  R --> A1
+  HR["Human Reviewer"] --> H
+  HR --> ATE
+```
+    
