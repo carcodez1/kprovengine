@@ -12,9 +12,13 @@ WORKDIR /app
 
 # Minimal runtime deps only
 RUN apt-get update \
-  && aspt-get install -y --no-install-recommends ca-certificates \
-  && rm -rf /var/lib/apt/lists/*
-
+ && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    libgl1 \
+    libxext6 \
+    libxrender1 \
+    libsm6 \
+ && rm -rf /var/lib/apt/lists/*
 # Install package (no dev deps in runtime image)
 COPY pyproject.toml README.md LICENSE /app/
 COPY src /app/src
