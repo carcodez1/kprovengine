@@ -1,0 +1,76 @@
+[project]
+name = "kprovengine"
+version = "0.1.0"
+description = "Local-first provenance engine for AI-assisted workflows with evidence, HITL, and reproducibility."
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Jeffrey Plewak", email = "plewak.jeff@gmail.com" }]
+
+keywords = [
+  "provenance",
+  "compliance",
+  "auditability",
+  "sbom",
+  "hitl",
+  "ocr",
+  "ai-architecture",
+  "supply-chain",
+  "cli",
+  "python",
+]
+
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Operating System :: OS Independent",
+  "Topic :: Software Development :: Libraries",
+  "Topic :: Security",
+]
+
+dependencies = [
+  "click>=8.1",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.6.0",
+  "pre-commit>=3.7",
+  "build>=1.2",
+]
+
+[project.urls]
+Homepage = "https://github.com/carcodez1/KProvEngine"
+Source = "https://github.com/carcodez1/KProvEngine"
+Issues = "https://github.com/carcodez1/KProvEngine/issues"
+Documentation = "https://github.com/carcodez1/KProvEngine#readme"
+
+[project.scripts]
+kprovengine = "kprovengine.cli:main"
+
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["mvp.py"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
