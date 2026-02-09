@@ -1,0 +1,15 @@
+version: "3.9"
+
+services:
+  kprovengine:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kprovengine
+    volumes:
+      - ./:/work
+    working_dir: /work
+    entrypoint: ["python", "-m", "kprovengine"]
+    command: ["--help"]
+    tty: true
+    stdin_open: true
