@@ -1,37 +1,132 @@
-# Secrets / local config
-.env
-.env.*
-!.env.example
+# =========================================================
+# KProvEngine — HARD IGNORE (Generated / Runtime Artifacts)
+# =========================================================
 
-# Runtime artifacts (DO NOT COMMIT)
+# ---- Pipeline runs (ALL MODES) ----
 runs/
-state/
-vault/
+demo_runs/
 output/
+outputs/
+stages/
+state/
 tmp/
-*.log
+vault/
+
+# ---- Evidence artifacts (never commit) ----
+run_summary.json
+manifest.json
+provenance.json
+human_review.json
+toolchain.json
+attestation.md
+hashes.txt
+sbom.json
+
+# ---- Recursive safety net (in case paths change) ----
+**/run_summary.json
+**/manifest.json
+**/provenance.json
+**/human_review.json
+**/toolchain.json
+**/attestation.md
+**/hashes.txt
+**/sbom.json
+**/stages/**
+**/outputs/**
+
+# ---- SnapToTask / engine state ----
 .snap_to_task/
+.snapshot/
+snapshot/
 
-# Local snapshots / scratch
-snapshot
-docs/snapshots/
-commits.txt
+# =========================================================
+# Demo / playground artifacts
+# =========================================================
+demo_input.txt
+input.txt
+*.demo.*
+*.run.*
+*.out.*
 
-# Python build / cache
+# =========================================================
+# Python / tooling
+# =========================================================
 __pycache__/
+**/__pycache__/
+*.py[cod]
 .pytest_cache/
 .ruff_cache/
+.mypy_cache/
+.cache/
 .coverage
 .coverage.*
 coverage.xml
 htmlcov/
+
 dist/
 build/
 *.egg-info/
+pip-wheel-metadata/
+
+# Virtual environments
 .venv/
 venv/
+.envrc
 
+# =========================================================
+# Environment / secrets
+# =========================================================
+.env
+.env.*
+!.env.example
+
+# =========================================================
+# Docker / containers
+# =========================================================
+*.pid
+docker-data/
+docker-volumes/
+docker-compose.override.yml
+
+# =========================================================
+# OCR / LLM caches (optional / V2+)
+# =========================================================
+.easyocr/
+models/
+ollama/
+huggingface/
+.cache/huggingface/
+
+# =========================================================
 # Editors / OS
+# =========================================================
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
 .DS_Store
+Thumbs.db
+
+# =========================================================
+# Docs artifacts (generated)
+# =========================================================
+docs/images/generated/
+docs/diagrams/*.svg
+docs/diagrams/*.png
+docs/diagrams/*.pdf
+
+# =========================================================
+# Governance safety
+# =========================================================
+commits.txt
+
+demo_runs/
+runs/
+outputs/
+stages/
+
+**/run_summary.json
+**/manifest.json
+**/provenance.json
+**/human_review.json

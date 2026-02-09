@@ -11,45 +11,64 @@ V1 principles:
 ## V1 Pipeline and Evidence Flow
 
 ```mermaid
+%%{ init: { "flowchart": { "curve": "stepBefore" } } }%%
 flowchart LR
-  %% KProvEngine V1: pipeline + evidence flow (single-pass, local-first)
+    %% KProvEngine V1 — Styled & Refactored
 
-  A["Input Artifacts<br/>(files, images, notes)"] --> B["Normalize<br/>(deterministic, local-only)"]
-  B --> C["Parse<br/>(format-aware, no inference)"]
-  C --> D["Extract<br/>(structural extraction)"]
-  D --> E["Render<br/>(outputs)"]
-  E --> R["Evidence Bundle<br/>(run directory)"]
+    %% Input
+    Input@{ shape: lean-r, label: "Input Artifacts\n(files, images, notes)" }
 
-  %% Optional adapters (non-authoritative)
-  subgraph OPT["Adapters (Optional, Non-authoritative)"]
-    OCR["OCR Adapter<br/>(EasyOCR / Tesseract)"]
-    LLM["LLM Adapter<br/>(Ollama / LangChain)"]
-  end
+    %% Core deterministic pipeline
+    Normalize@{ shape: rect, label: "Normalize\n(deterministic · local-only)" }
+    Parse@{ shape: rect, label: "Parse\n(format-aware · no inference)" }
+    Extract@{ shape: rect, label: "Extract\n(structural extraction)" }
+    Render@{ shape: rect, label: "Render\n(outputs)" }
 
-  OCR -.-> C
-  OCR -.-> D
-  LLM -.-> D
+    Evidence@{ shape: cyl, label: "Evidence Bundle\n(run directory)" }
 
-  %% Evidence artifacts (V1)
-  subgraph ART["Evidence Artifacts (V1)"]
-    M["manifest.json<br/>SHA-256 manifest"]
-    P["provenance.json<br/>execution metadata"]
-    T["toolchain.json<br/>tool/version disclosure"]
-    H["human_review.json<br/>PENDING allowed"]
-    X["hashes.txt<br/>content hashes"]
-    ATE["attestation.md<br/>human statement"]
-    S["sbom.json<br/>CI-generated when available"]
-  end
+    Input --> Normalize --> Parse --> Extract --> Render --> Evidence
 
-  R --> M
-  R --> P
-  R --> T
-  R --> H
-  R --> X
-  R --> ATE
-  R --> S
+    %% Optional adapters (explicitly non-authoritative)
+    subgraph Adapters["Adapters (Optional · Non-authoritative)"]
+        OCR@{ shape: lin-rect, label: "OCR Adapter\n(EasyOCR · Tesseract)" }
+        LLM@{ shape: lin-rect, label: "LLM Adapter\n(Ollama · LangChain)" }
+    end
 
-  HR["Human Reviewer"] --> H
-  HR --> ATE
+    OCR -.-> Parse
+    LLM -.-> Extract
+
+    %% Evidence artifacts
+    subgraph Artifacts["Evidence Artifacts (V1)"]
+        Manifest@{ shape: doc, label: "manifest.json\nSHA-256 manifest" }
+        Provenance@{ shape: doc, label: "provenance.json\nexecution metadata" }
+        Toolchain@{ shape: doc, label: "toolchain.json\ntool/version disclosure" }
+        HumanReview@{ shape: doc, label: "human_review.json\nPENDING allowed" }
+        Hashes@{ shape: doc, label: "hashes.txt\ncontent hashes" }
+        Attestation@{ shape: doc, label: "attestation.md\nhuman statement" }
+        SBOM@{ shape: doc, label: "sbom.json\nCI-generated when available" }
+    end
+
+    Evidence --> Manifest
+    Evidence --> Provenance
+    Evidence --> Toolchain
+    Evidence --> HumanReview
+    Evidence --> Hashes
+    Evidence --> Attestation
+    Evidence --> SBOM
+
+    %% Human in the loop (authority)
+    Human@{ shape: rounded, label: "Human Reviewer" }
+    Human --> HumanReview
+    Human --> Attestation
+
+    %% Styling
+    classDef core fill:#e8f1ff,stroke:#4c6ef5,stroke-width:2px;
+    classDef adapter fill:#f5f5f5,stroke:#999,stroke-dasharray:5 5;
+    classDef evidence fill:#e6fcf5,stroke:#2f9e44;
+    classDef human fill:#fff3bf,stroke:#f59f00,stroke-width:2px;
+
+    class Normalize,Parse,Extract,Render core;
+    class OCR,LLM adapter;
+    class Evidence,Manifest,Provenance,Toolchain,HumanReview,Hashes,Attestation,SBOM evidence;
+    class Human human;
 ```
-    
