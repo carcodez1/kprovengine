@@ -118,8 +118,8 @@ On GitHub:
 
 - Protect the `main` branch.
 - Required status checks:
-  • The ci workflow must pass for all supported Python versions (matrix).
-  • If additional enforcement workflows exist (e.g., security, docker-ci), they must also pass when present.
+    - The ci workflow must pass for all supported Python versions (matrix).
+    - If additional enforcement workflows exist (e.g., security, docker-ci), they must also pass when present.
 
 Drafts and WIP commits are not protected.
 
