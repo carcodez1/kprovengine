@@ -24,12 +24,7 @@ CANON = {
     "cli_entry": "kprovengine.cli:main",
 }
 
-FORBIDDEN = [
-    "kprovenegine",
-    "kprovengione",
-    "github.com/carcodez1/KProvEngine",
-    "carcodez1/KProvEngine",
-]
+FORBIDDEN_FILE = Path("docs/governance/IDENTITY_FORBIDDEN_TOKENS.txt")
 
 CHECK_FILES_REQUIRE_REPO_URL = [
     Path("README.md"),
@@ -51,10 +46,20 @@ def _ok(msg: str) -> None:
 
 
 def _scan_forbidden(tracked_files: list[Path]) -> int:
+    if not FORBIDDEN_FILE.exists():
+        _fail(f"{FORBIDDEN_FILE}: missing forbidden token policy")
+        return 1
+
+    forbidden = [ln.strip() for ln in _read_text(FORBIDDEN_FILE).splitlines() if ln.strip() and not ln.strip().startswith("#")]
+
+    skip = {Path(__file__).resolve(), FORBIDDEN_FILE.resolve()}
+
     rc = 0
-    for tok in FORBIDDEN:
+    for tok in forbidden:
         hits: list[str] = []
         for f in tracked_files:
+            if f.resolve() in skip:
+                continue
             # Skip obvious binaries by extension; keep minimal.
             if f.suffix.lower() in {".png", ".jpg", ".jpeg", ".gif", ".ico", ".pdf"}:
                 continue
