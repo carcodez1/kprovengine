@@ -1,83 +1,80 @@
-# =============================================================================
-# kprovengine Makefile (OSS Core — Release Hardened)
-#
-# Contract:
-# - Never installs into system Python.
-# - Local venv only.
-# - Supports Python 3.11 and 3.12 ONLY.
-# - Deterministic failure modes and messaging.
-# - CI parity via `make preflight`.
-# =============================================================================
+# ======================================================================
+# FILE: Makefile
+# PROJECT: kprovengine (OSS core)
+# PURPOSE: Deterministic local gates mirroring CI: lint/test/build + hygiene
+# TRACEABILITY:
+#   - Governance: OSS_GOVERNANCE.md (CI and merge requirements, determinism)
+#   - CI: .github/workflows/ci.yml
+# VERSION: V1-LOCKED
+# LAST-UPDATED: 2026-02-15
+# ======================================================================
 
 SHELL := /bin/bash
 .SHELLFLAGS := -eu -o pipefail -c
 .ONESHELL:
 
-# --- User Overrides (explicit only) ---
+# ---- User-configurable knobs (override: make VENV=.venv PYTHON_BOOTSTRAP=python3.12) ----
 VENV ?= .venv
 PYTHON_BOOTSTRAP ?= python3.12
 
-# --- Derived Paths ---
+# ---- Derived ----
 PY := $(VENV)/bin/python
 PIP := $(PY) -m pip
 
+# ---- Policy ----
+SUPPORTED_PY_MIN ?= 3.11
+SUPPORTED_PY_MAX ?= 3.12
+
+# ---- Gates (SSOT names) ----
 ARTIFACT_GUARD_SH := scripts/check_tracked_artifacts.sh
 IDENTITY_GUARD_PY := scripts/check_project_identity.py
+VENV_POLICY_PY    := scripts/check_venv_python.py
 
-.PHONY: help env venv install lint test cov build artifacts identity precommit preflight clean distclean
+.PHONY: help env venv install lint test cov build artifacts identity venv-policy precommit preflight clean distclean
 
 help:
 	@printf "%s\n" \
 	"Targets:" \
-	"  env         Show resolved configuration" \
-	"  venv        Create local virtual environment + enforce python policy" \
-	"  install     Install editable package + dev deps" \
-	"  lint        Run ruff" \
-	"  test        Run pytest" \
-	"  cov         Run pytest with coverage reports" \
-	"  build       Build sdist + wheel" \
-	"  artifacts   Enforce artifact hygiene" \
-	"  identity    Enforce project identity policy" \
-	"  precommit   Run pre-commit on all files" \
-	"  preflight   lint + test + build + artifacts + identity + precommit" \
-	"  clean       Remove build/test artifacts" \
-	"  distclean   Remove artifacts + venv"
+	"  env            Show resolved toolchain variables" \
+	"  venv           Create venv using PYTHON_BOOTSTRAP (no system install)" \
+	"  install        Install editable package + dev deps into venv" \
+	"  lint           Run ruff (no auto-fix)" \
+	"  test           Run pytest" \
+	"  cov            Run pytest with coverage outputs" \
+	"  build          Build sdist + wheel" \
+	"  artifacts      Fail if forbidden artifacts are tracked" \
+	"  identity       Fail if project identity drift is detected" \
+	"  precommit      Run pre-commit on all files (in venv)" \
+	"  preflight      lint + test + build + artifacts + identity + precommit" \
+	"  clean          Remove build/test artifacts (keeps venv)" \
+	"  distclean      clean + remove venv" \
+	"" \
+	"Variables (override):" \
+	"  VENV=.venv" \
+	"  PYTHON_BOOTSTRAP=python3.12"
 
 env:
 	@echo "PWD=$$(pwd)"
 	@echo "VENV=$(VENV)"
 	@echo "PYTHON_BOOTSTRAP=$(PYTHON_BOOTSTRAP)"
 	@echo "PY=$(PY)"
+	@echo "SUPPORTED_PY=$(SUPPORTED_PY_MIN)..$(SUPPORTED_PY_MAX)"
 	@echo "ARTIFACT_GUARD_SH=$(ARTIFACT_GUARD_SH)"
 	@echo "IDENTITY_GUARD_PY=$(IDENTITY_GUARD_PY)"
+	@echo "VENV_POLICY_PY=$(VENV_POLICY_PY)"
 
 # Internal: ensure bootstrap exists on PATH
 define ASSERT_BOOTSTRAP
-	command -v "$(PYTHON_BOOTSTRAP)" >/dev/null || ( \
-		echo "ERROR: PYTHON_BOOTSTRAP not found: $(PYTHON_BOOTSTRAP)" >&2; \
-		echo "Tip (macOS/Homebrew): brew install python@3.12" >&2; \
+	command -v "$(PYTHON_BOOTSTRAP)" >/dev/null 2>&1 || ( \
+		echo "ERROR: PYTHON_BOOTSTRAP not found on PATH: $(PYTHON_BOOTSTRAP)" >&2; \
+		echo "Tip (macOS/Homebrew): brew install python@3.12 && export PYTHON_BOOTSTRAP=/opt/homebrew/opt/python@3.12/bin/python3.12" >&2; \
 		exit 1; \
 	)
 endef
 
 # Internal: ensure venv python exists
 define ASSERT_VENV
-	test -x "$(PY)" || ( \
-		echo "ERROR: venv missing. Run: make venv" >&2; \
-		exit 1; \
-	)
-endef
-
-# Internal: enforce venv python version policy (NO HEREDOC)
-# Note: this is a policy choice to avoid silent compatibility with unsupported Python versions.
-# If we wanted to support more versions, we could relax this check and rely on classifiers and CI to enforce compatibility, but for now we want hard enforcement.
-# Also note that this check is separate from ASSERT_VENV to ensure that we get a clear error message about missing venv vs unsupported python version.
-define ASSERT_VENV_PY_POLICY
-	$(call ASSERT_VENV)
-	"$(PY)" -c 'import sys; maj, min = sys.version_info[:2]; \
-allowed = ((3, 11), (3, 12)); \
-if (maj, min) not in allowed: \
-    raise SystemExit(f"ERROR: venv python must be 3.11 or 3.12; got {sys.version.split()[0]}")'
+	test -x "$(PY)" || (echo "ERROR: venv missing. Run: make venv" >&2; exit 1)
 endef
 
 venv:
@@ -85,12 +82,19 @@ venv:
 	@if [ ! -x "$(PY)" ]; then \
 		"$(PYTHON_BOOTSTRAP)" -m venv "$(VENV)"; \
 	fi
-	@$(call ASSERT_VENV_PY_POLICY)
+	@$(call ASSERT_VENV)
 	@$(PY) -V
 	@$(PIP) --version
+	@$(MAKE) venv-policy
+
+# Enforce venv python policy using a dedicated script (avoids Make heredoc hazards)
+venv-policy:
+	@$(call ASSERT_VENV)
+	@test -f "$(VENV_POLICY_PY)" || (echo "ERROR: missing $(VENV_POLICY_PY)" >&2; exit 1)
+	@$(PY) "$(VENV_POLICY_PY)" --min "$(SUPPORTED_PY_MIN)" --max "$(SUPPORTED_PY_MAX)"
 
 install: venv
-	@$(PIP) install --upgrade pip
+	@$(PIP) install -U pip
 	@$(PIP) install -e ".[dev]"
 
 lint: install
@@ -128,3 +132,7 @@ clean:
 
 distclean: clean
 	@rm -rf "$(VENV)"
+
+# ======================================================================
+# END OF FILE
+# ======================================================================
