@@ -1,12 +1,11 @@
 # KProvEngine
-
 [![CI](https://github.com/carcodez1/kprovengine/actions/workflows/ci.yml/badge.svg)](https://github.com/carcodez1/kprovengine/actions/workflows/ci.yml)
 [![Security](https://github.com/carcodez1/kprovengine/actions/workflows/security.yml/badge.svg)](https://github.com/carcodez1/kprovengine/actions/workflows/security.yml)
 [![Python](https://img.shields.io/badge/python-3.11–3.12-blue)](#python-version-policy-v1)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Scope](https://img.shields.io/badge/scope-V1%20locked-critical)](#governance--scope-lock)
 
-KProvEngine is a **local-first provenance engine** for AI-assisted human workflows.
+kprovengine is a **local-first provenance engine** for AI-assisted human workflows.
 
 It converts unstructured artifacts into structured outputs while producing
 **verifiable evidence of execution, toolchain disclosure, authorship, and
@@ -33,7 +32,7 @@ feature breadth.
 
 ## Non-Goals
 
-KProvEngine does **not** aim to be:
+kprovengine does **not** aim to be:
 
 - A hosted service or SaaS
 - An autonomous or agent-driven system
@@ -47,28 +46,23 @@ intentionally avoided.
 
 ## High-Level Architecture
 
-
-
-
-
-
-KProvEngine is structured as a **library-first core** with optional adapters:
+kprovengine is structured as a **library-first core** with optional adapters:
 
 - **Core pipeline**
-  - Deterministic stages: normalize → parse → extract → render
-  - No network access
-  - No hidden state
+    - Deterministic stages: normalize → parse → extract → render
+    - No network access
+    - No hidden state
 
 - **Adapters**
-  - Optional OCR and LLM integrations
-  - Examples: EasyOCR, Tesseract, Ollama
-  - Non-authoritative by design
+    - Optional OCR and LLM integrations
+    - Examples: EasyOCR, Tesseract, Ollama
+    - Non-authoritative by design
 
 - **Evidence layer**
-  - Manifests and hashes
-  - Provenance records
-  - Toolchain disclosure
-  - Explicit human review artifacts
+    - Manifests and hashes
+    - Provenance records
+    - Toolchain disclosure
+    - Explicit human review artifacts
 
 See [`docs/architecture.md`](docs/architecture.md) for the authoritative diagram.
 
