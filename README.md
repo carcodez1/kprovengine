@@ -1,7 +1,7 @@
 # KProvEngine
 
-[![CI](https://github.com/carcodez1/KProvEngine/actions/workflows/ci.yml/badge.svg)](https://github.com/carcodez1/KProvEngine/actions/workflows/ci.yml)
-[![Security](https://github.com/carcodez1/KProvEngine/actions/workflows/security.yml/badge.svg)](https://github.com/carcodez1/KProvEngine/actions/workflows/security.yml)
+[![CI](https://github.com/carcodez1/kprovengine/actions/workflows/ci.yml/badge.svg)](https://github.com/carcodez1/kprovengine/actions/workflows/ci.yml)
+[![Security](https://github.com/carcodez1/kprovengine/actions/workflows/security.yml/badge.svg)](https://github.com/carcodez1/kprovengine/actions/workflows/security.yml)
 [![Python](https://img.shields.io/badge/python-3.11–3.12-blue)](#python-version-policy-v1)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Scope](https://img.shields.io/badge/scope-V1%20locked-critical)](#governance--scope-lock)

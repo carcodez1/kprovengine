@@ -1,6 +1,6 @@
 FROM python:3.12-slim
 
-LABEL org.opencontainers.image.source="https://github.com/carcodez1/KProvEngine"
+LABEL org.opencontainers.image.source="https://github.com/carcodez1/kprovengine"
 LABEL org.opencontainers.image.title="kprovengine"
 LABEL org.opencontainers.image.description="KProvEngine V1: local-first provenance scaffold"
 LABEL maintainer="Jeffrey Plewak <plewak.jeff@gmail.com>"
