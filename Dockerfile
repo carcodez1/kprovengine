@@ -1,31 +1,8 @@
 FROM python:3.12-slim
 
-LABEL org.opencontainers.image.source="https://github.com/carcodez1/kprovengine"
-LABEL org.opencontainers.image.title="kprovengine"
-LABEL org.opencontainers.image.description="KProvEngine V1: local-first provenance scaffold"
-LABEL maintainer="Jeffrey Plewak <plewak.jeff@gmail.com>"
+# Install cosign binary, syft, jq
+RUN apt-get update && apt-get install -y jq curl \
+    && curl -sSL https://github.com/sigstore/cosign/releases/latest/download/cosign-linux-amd64 \
+    -o /usr/local/bin/cosign && chmod +x /usr/local/bin/cosign
 
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
-
-WORKDIR /app
-
-# Minimal runtime deps only
-RUN apt-get update \
- && apt-get install -y --no-install-recommends \
-    ca-certificates \
-    libgl1 \
-    libxext6 \
-    libxrender1 \
-    libsm6 \
- && rm -rf /var/lib/apt/lists/*
-# Install package (no dev deps in runtime image)
-COPY pyproject.toml README.md LICENSE /app/
-COPY src /app/src
-
-RUN python -m pip install --upgrade pip setuptools wheel \
-  && python -m pip install --no-cache-dir .
-
-# Default: show help
-ENTRYPOINT ["python", "-m", "kprovengine"]
-CMD ["--help"]
+RUN python3 -m pip install --upgrade pip syft in_toto
