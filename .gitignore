@@ -130,3 +130,4 @@ stages/
 **/manifest.json
 **/provenance.json
 **/human_review.json
+.vscode/settings.local.json

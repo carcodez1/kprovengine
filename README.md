@@ -95,6 +95,8 @@ They do **not** imply certification or validation.
 
 - Python **3.11 or 3.12**
 - Virtual environment required (PEP 668 on macOS)
+- swap python or alias python to python3 (on MacOS) if failure installing occurs.
+-
 
 ### Setup
 
