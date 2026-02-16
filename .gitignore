@@ -1,8 +1,9 @@
 # =========================================================
-# KProvEngine — HARD IGNORE (Generated / Runtime Artifacts)
+# kprovengine — HARD IGNORE (Generated / Runtime Artifacts)
+# Contract: display identity tokens must not appear here.
 # =========================================================
 
-# ---- Pipeline runs (ALL MODES) ----
+# ---- Pipeline runs / state ----
 runs/
 demo_runs/
 output/
@@ -12,7 +13,12 @@ state/
 tmp/
 vault/
 
-# ---- Evidence artifacts (never commit) ----
+# ---- Engine internal state ----
+.snap_to_task/
+.snapshot/
+snapshot/
+
+# ---- Evidence / provenance artifacts (never commit) ----
 run_summary.json
 manifest.json
 provenance.json
@@ -22,7 +28,7 @@ attestation.md
 hashes.txt
 sbom.json
 
-# ---- Recursive safety net (in case paths change) ----
+# Recursive safety net (in case paths change)
 **/run_summary.json
 **/manifest.json
 **/provenance.json
@@ -31,26 +37,15 @@ sbom.json
 **/attestation.md
 **/hashes.txt
 **/sbom.json
-**/stages/**
-**/outputs/**
 
-# ---- SnapToTask / engine state ----
-.snap_to_task/
-.snapshot/
-snapshot/
-
-# =========================================================
-# Demo / playground artifacts
-# =========================================================
+# ---- Demo / playground artifacts ----
 demo_input.txt
 input.txt
 *.demo.*
 *.run.*
 *.out.*
 
-# =========================================================
-# Python / tooling
-# =========================================================
+# ---- Python / tooling ----
 __pycache__/
 **/__pycache__/
 *.py[cod]
@@ -62,71 +57,57 @@ __pycache__/
 .coverage.*
 coverage.xml
 htmlcov/
-
 dist/
 build/
 *.egg-info/
 pip-wheel-metadata/
 
-# Virtual environments
+# ---- Virtual environments ----
 .venv/
 venv/
 .envrc
 
-# =========================================================
-# Environment / secrets
-# =========================================================
+# ---- Environment / secrets ----
 .env
 .env.*
 !.env.example
 
-# =========================================================
-# Docker / containers
-# =========================================================
+# ---- Docker / containers ----
 *.pid
 docker-data/
 docker-volumes/
 docker-compose.override.yml
 
-# =========================================================
-# OCR / LLM caches (optional / V2+)
-# =========================================================
+# ---- OCR / LLM caches (optional / V2+) ----
 .easyocr/
 models/
 ollama/
 huggingface/
 .cache/huggingface/
 
-# =========================================================
-# Editors / OS
-# =========================================================
+# ---- Editors / OS ----
 .vscode/
 .idea/
+.vscode/settings.local.json
 *.swp
 *.swo
 *~
 .DS_Store
 Thumbs.db
 
-# =========================================================
-# Docs artifacts (generated)
-# =========================================================
+# ---- Docs artifacts (generated) ----
 docs/images/generated/
 docs/diagrams/*.svg
 docs/diagrams/*.png
 docs/diagrams/*.pdf
 
-# =========================================================
-# Governance safety
-# =========================================================
+# ---- Governance scratch ----
 commits.txt
+# ---- Local snapshots / objectives (never commit) ----
+docs/objective/
+docs/governance/PROJECT_SNAPSHOT_V1_*.md
+# ---- Local planning / scratch (never commit) ----
+docs/objective/
 
-demo_runs/
-runs/
-outputs/
-stages/
-
-**/run_summary.json
-**/manifest.json
-**/provenance.json
-**/human_review.json
+# Runtime logs
+logs/

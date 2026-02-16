@@ -1,0 +1,11 @@
+# IDENTITY FORBIDDEN TOKENS (V1 LOCKED)
+# Purpose: forbid technical-identity drift patterns that frequently appear by accident.
+# Note: This file MUST NOT be used for typo policing in code identifiers.
+#       Only include identity-breaking tokens.
+
+github.com/carcodez1/KProvEngine
+carcodez1/KProvEngine
+carcodez1/kProvEngine
+carcodez1/kprovEngine
+github.com/carcodez1/kProvEngine
+github.com/carcodez1/kprovEngine

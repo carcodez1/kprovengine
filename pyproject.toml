@@ -32,9 +32,7 @@ classifiers = [
   "Topic :: Security",
 ]
 
-dependencies = [
-  "click>=8.1",
-]
+dependencies = []
 
 [project.optional-dependencies]
 dev = [
@@ -42,13 +40,14 @@ dev = [
   "ruff>=0.6.0",
   "pre-commit>=3.7",
   "build>=1.2",
+  "tox>=4.0",
 ]
 
 [project.urls]
-Homepage = "https://github.com/carcodez1/KProvEngine"
-Source = "https://github.com/carcodez1/KProvEngine"
-Issues = "https://github.com/carcodez1/KProvEngine/issues"
-Documentation = "https://github.com/carcodez1/KProvEngine#readme"
+Homepage = "https://github.com/carcodez1/kprovengine"
+Source = "https://github.com/carcodez1/kprovengine"
+Issues = "https://github.com/carcodez1/kprovengine/issues"
+Documentation = "https://github.com/carcodez1/kprovengine#readme"
 
 [project.scripts]
 kprovengine = "kprovengine.cli:main"
