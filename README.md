@@ -1,187 +1,291 @@
-# KProvEngine
-[![CI](https://github.com/carcodez1/kprovengine/actions/workflows/ci.yml/badge.svg)](https://github.com/carcodez1/kprovengine/actions/workflows/ci.yml)
-[![Security](https://github.com/carcodez1/kprovengine/actions/workflows/security.yml/badge.svg)](https://github.com/carcodez1/kprovengine/actions/workflows/security.yml)
-[![Python](https://img.shields.io/badge/python-3.11–3.12-blue)](#python-version-policy-v1)
-[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![Scope](https://img.shields.io/badge/scope-V1%20locked-critical)](#governance--scope-lock)
+# kprovengine
 
-kprovengine is a **local-first provenance engine** for AI-assisted human workflows.
+Deterministic provenance and governance scaffolding for evidence-ready pipelines.
 
-It converts unstructured artifacts into structured outputs while producing
-**verifiable evidence of execution, toolchain disclosure, authorship, and
-explicit human review**.
-
-The project is intentionally conservative.
-AI may assist extraction and structuring, but **humans remain the authority**.
-
-This repository prioritizes correctness, traceability, and governance over
-feature breadth.
+kprovengine V1 is a governance-locked open-source core focused on deterministic execution, runtime policy enforcement, artifact hygiene, and identity surface control.
 
 ---
 
-## Design Goals
+## Table of Contents
 
-- Local-first execution
-- Deterministic, reproducible pipelines
-- Explicit human-in-the-loop (HITL) review
-- Clear separation between core logic and adapters
-- Evidence artifacts suitable for audit and traceability
-- Minimal, defensible dependency surface
-
----
-
-## Non-Goals
-
-kprovengine does **not** aim to be:
-
-- A hosted service or SaaS
-- An autonomous or agent-driven system
-- A workflow orchestration framework
-- A compliance-certified product
-
-Claims of certification, regulatory approval, or automated validation are
-intentionally avoided.
-
----
-
-## High-Level Architecture
-
-kprovengine is structured as a **library-first core** with optional adapters:
-
-- **Core pipeline**
-    - Deterministic stages: normalize → parse → extract → render
-    - No network access
-    - No hidden state
-
-- **Adapters**
-    - Optional OCR and LLM integrations
-    - Examples: EasyOCR, Tesseract, Ollama
-    - Non-authoritative by design
-
-- **Evidence layer**
-    - Manifests and hashes
-    - Provenance records
-    - Toolchain disclosure
-    - Explicit human review artifacts
-
-See [`docs/architecture.md`](docs/architecture.md) for the authoritative diagram.
-
----
-
-## Evidence Bundle (V1)
-
-A typical run may produce:
-
-- `run_summary.json`
-- `manifest.json` — file paths and SHA-256 hashes
-- `provenance.json` — execution metadata
-- `toolchain.json` — tool and version disclosure
-- `human_review.json` — explicit review status (PENDING allowed)
-
-Artifacts support inspection and traceability.
-They do **not** imply certification or validation.
-
----
-
-## Quick Start (Local)
-
-### Requirements
-
-- Python **3.11 or 3.12**
-- Virtual environment required (PEP 668 on macOS)
-- swap python or alias python to python3 (on MacOS) if failure installing occurs.
--
-
-### Setup
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-
-python -m pip install -U pip
-python -m pip install -e ".[dev]"
-```
-
-### Run a demo
-
-```bash
-echo "Hello provenance" > input.txt
-python -m kprovengine.cli input.txt --out runs
-```
-
-Inspect the generated `runs/<run-id>/` directory.
-
----
-
-## Docker Demo (Optional)
-
-```bash
-docker build -t kprovengine:demo .
-docker run --rm -v $(pwd):/work kprovengine:demo   python -m kprovengine.cli /work/input.txt --out /work/runs
-```
-
-Docker support is provided for experimentation and local isolation.
-It is not required for V1 usage.
-
----
-
-## Python Version Policy (V1)
-
-Supported versions:
-
-- Python 3.11
-- Python 3.12
-
-Python 3.13+ is intentionally excluded in V1 to ensure:
-
-- Stable wheels
-- Reproducible CI
-- Consistent typing and tooling behavior
-- Long-term support parity
-
-Attempting to install KProvEngine with Python 3.13+ will fail by design.
-
----
-
-## Governance & Scope Lock
-
-V1 behavior is explicitly governed.
-
-Authoritative documents:
-
-- `docs/governance/PROMPT_V1_LOCKED.md`
-- `docs/governance/REVIEW_GATE_V1.md`
-- `docs/governance/STACK_V1_LOCKED.md`
-- `docs/governance/CHANGE_CONTROL.md`
-
-Changes outside V1 scope must be deferred to V2.
-
-This is intentional.
+- [Status](#status)
+- [Overview](#overview)
+- [Core Capabilities](#core-capabilities)
+- [Architecture](#architecture)
+- [End-to-End Use Case](#end-to-end-use-case)
+- [Installation](#installation)
+- [Example Execution](#example-execution)
+- [Development Workflow](#development-workflow)
+- [Governance Model](#governance-model)
+- [Versioning Contract](#versioning-contract)
+- [Scope Boundaries (V1)](#scope-boundaries-v1)
+- [Roadmap](#roadmap)
+- [License](#license)
 
 ---
 
 ## Status
 
-This repository represents an early public V1 release.
+![CI](https://github.com/carcodez1/kprovengine/actions/workflows/ci.yml/badge.svg)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue)
 
-The emphasis is on:
+Supported Python: `>=3.11,<3.13`
 
-- Correctness
-- Structure
-- Security posture
-- Governance discipline
+---
 
-Feature expansion is deferred until V2.
+## Overview
+
+Most modern data, ML, and compliance pipelines fail in governance, not logic.
+
+Common failure modes:
+
+- Runtime drift across environments
+- Undetected artifact pollution
+- Identity inconsistencies
+- Incomplete traceability surfaces
+- CI that does not mirror local enforcement
+- Governance rules enforced socially instead of technically
+
+kprovengine V1 establishes:
+
+- Deterministic CLI execution
+- Runtime Python version enforcement
+- Canonical repository identity enforcement
+- Artifact boundary control
+- Cross-version CI test matrix
+- Fail-closed governance surfaces
+
+This is infrastructure, not a demo framework.
+
+---
+
+## Core Capabilities
+
+### 1. Identity Guard
+
+- Technical identity enforcement (kprovengine)
+- Controlled display identity surface
+- Forbidden token scanning
+- Canonical repository URL verification
+- Docker label validation
+
+### 2. Artifact Guard
+
+- Fails if runtime artifacts are tracked
+- Enforces clean repository boundaries
+- Protects release integrity
+
+### 3. Python Version Policy
+
+- Enforced `>=3.11,<3.13`
+- Validated locally and in CI
+- Fail-closed enforcement
+
+### 4. CI Parity
+
+Local:
+
+```
+make preflight
+```
+
+CI:
+
+- lint (ruff)
+- test (3.11 / 3.12)
+- build
+- artifact guard
+- identity guard
+- pre-commit
+- python policy enforcement
+
+If local preflight passes, CI should pass.
+
+---
+
+## Architecture
+
+### Execution Flow
+
+```
+User Input
+   │
+   ▼
+CLI (argparse)
+   │
+   ▼
+Deterministic Processing Core
+   │
+   ├── run_summary.json
+   ├── provenance.json
+   ├── toolchain.json
+   └── human_review.json
+   │
+   ▼
+Filesystem Output (timestamp-scoped)
+```
+
+Each run produces structured evidence artifacts.
+
+All outputs are:
+
+- Deterministic
+- Version-traceable
+- Runtime-policy validated
+- Governed by identity enforcement
+
+---
+
+## End-to-End Use Case
+
+### Scenario: Compliance-Aware Data Transformation
+
+A regulated team processes input artifacts that must:
+
+- Be reproducible
+- Record toolchain state
+- Preserve provenance metadata
+- Prevent identity spoofing
+- Maintain runtime version traceability
+
+Execution:
+
+```
+python -m kprovengine.cli input.txt --out runs/
+```
+
+Output:
+
+```
+runs/2026-02-15T20-13-00Z/
+  run_summary.json
+  provenance.json
+  toolchain.json
+  human_review.json
+```
+
+What this guarantees:
+
+- Exact runtime Python version captured
+- Deterministic artifact generation
+- Toolchain snapshot
+- Human review placeholder contract
+- Governance compliance gates enforced before merge
+
+This provides a compliance-ready execution scaffold, not just transformation logic.
+
+---
+
+## Installation
+
+```
+python3.12 -m venv .venv
+source .venv/bin/activate
+pip install -U pip
+pip install -e ".[dev]"
+```
+
+---
+
+## Example Execution
+
+```
+python -m kprovengine.cli input.txt --out runs/
+```
+
+---
+
+## Development Workflow
+
+```
+make preflight
+```
+
+This runs:
+
+- lint
+- test
+- build
+- artifact guard
+- identity guard
+- pre-commit
+
+Preflight is deterministic and mirrors CI.
+
+---
+
+## Governance Model
+
+Governance is codified, not implied.
+
+Enforced contracts:
+
+- Canonical repository surface validation
+- Display name scope restrictions
+- Forbidden identity token detection
+- Python runtime policy enforcement
+- Artifact hygiene guard
+- Required CI checks before merge
+
+Governance logic lives in:
+
+```
+docs/governance/
+scripts/check_project_identity.py
+scripts/check_tracked_artifacts.sh
+scripts/check_venv_python.py
+```
+
+Changes to governance logic require version elevation.
+
+---
+
+## Versioning Contract
+
+V1 is governance-locked.
+
+Breaking changes include:
+
+- Runtime policy modifications
+- Identity enforcement surface changes
+- Artifact guard rule changes
+- CI enforcement changes
+
+Such changes require major version increment.
+
+---
+
+## Scope Boundaries (V1)
+
+Excluded intentionally:
+
+- Enterprise compliance adapters
+- Policy-as-code engines
+- Signed artifact infrastructure
+- External audit integrations
+- SaaS multi-tenant features
+
+V1 is the deterministic OSS governance core.
+
+---
+
+## Roadmap
+
+Future versions may introduce:
+
+- Evidence bundle export schemas
+- Signed artifact pipelines
+- Compliance framework adapters (NIST / ISO)
+- Enterprise integration layers
+
+These are intentionally excluded from V1.
 
 ---
 
 ## License
 
-MIT License. See `LICENSE`.
+MIT License
+© 2026 Jeffrey Plewak
 
----
-
-## Sponsorship
-
-If this project is useful in professional or compliance-sensitive work,
-consider sponsoring to support continued maintenance.
+See LICENSE for details.
