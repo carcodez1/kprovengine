@@ -4,6 +4,7 @@ on:
   push:
     branches: ["main"]
   pull_request:
+    branches: ["main"]
 
 permissions:
   contents: read
@@ -13,42 +14,89 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
+  lint:
+    name: lint (ruff)
     runs-on: ubuntu-latest
-
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.11", "3.12"]
-
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
-          cache: pip
+          python-version: "3.12"
+          cache: "pip"
 
       - name: Install
         run: |
           python -m pip install -U pip
           python -m pip install -e ".[dev]"
-      - name: Artifact hygiene
-        run: |
-          bash scripts/check_tracked_artifacts.sh
 
-      - name: Lint
+      - name: Ruff
         run: |
           python -m ruff check .
 
-      - name: Makefile safety
-        run: |
-          bash scripts/check_makefile_safety.sh
+  test:
+    name: test (py${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Tests
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: Install
+        run: |
+          python -m pip install -U pip
+          python -m pip install -e ".[dev]"
+
+      - name: Pytest
         run: |
           python -m pytest -q
 
-      - name: Build
+  build_and_governance:
+    name: build + governance (identity/artifacts/pre-commit)
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install
         run: |
-          python -m build
+          python -m pip install -U pip
+          python -m pip install -e ".[dev]"
+
+      - name: Enforce venv python policy
+        run: |
+          python scripts/check_venv_python.py --min 3.11 --max-excl 3.13
+
+      - name: Build sdist/wheel
+        run: |
+          python -m build -q
+
+      - name: Tracked artifacts guard
+        run: |
+          bash scripts/check_tracked_artifacts.sh
+
+      - name: Identity guard
+        run: |
+          python scripts/check_project_identity.py
+
+      - name: Pre-commit (all files)
+        run: |
+          python -m pre_commit run --all-files

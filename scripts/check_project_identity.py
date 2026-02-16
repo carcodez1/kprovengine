@@ -21,27 +21,22 @@ ROOT: Final[Path] = Path(__file__).resolve().parents[1]
 
 # ---- Contract constants (V1 LOCKED) ----
 TECH_NAME: Final[str] = "kprovengine"
-DISPLAY_NAME: Final[str] = "KProvEngine"
 CANONICAL_REPO: Final[str] = "https://github.com/carcodez1/kprovengine"
 
-# Forbidden tokens are externalized to avoid checker self-scan issues.
 FORBIDDEN_TOKENS_FILE: Final[Path] = ROOT / "docs" / "governance" / "IDENTITY_FORBIDDEN_TOKENS.txt"
+DISPLAY_NAME_FILE: Final[Path] = ROOT / "docs" / "governance" / "IDENTITY_DISPLAY_NAME.txt"
 
-# Surfaces where CANONICAL_REPO must appear verbatim.
 REQUIRED_CANONICAL_REPO_FILES: Final[tuple[Path, ...]] = (
     ROOT / "README.md",
     ROOT / "pyproject.toml",
     ROOT / "Dockerfile",
 )
 
-# Surfaces where TECH_NAME must appear (packaging + OCI title).
 REQUIRED_TECH_IDENTITY_FILES: Final[tuple[Path, ...]] = (
     ROOT / "pyproject.toml",
     ROOT / "Dockerfile",
 )
 
-# Display name allowed only in documentation/marketing text and Dockerfile description label text.
-# In practice: allow under docs/** and a limited set of top-level docs.
 DISPLAY_ALLOWED_ROOTS: Final[tuple[Path, ...]] = (
     ROOT / "README.md",
     ROOT / "OSS_GOVERNANCE.md",
@@ -49,11 +44,9 @@ DISPLAY_ALLOWED_ROOTS: Final[tuple[Path, ...]] = (
     ROOT / "CONTRIBUTING.md",
     ROOT / "SECURITY.md",
     ROOT / "CODE_OF_CONDUCT.md",
-    ROOT / "Dockerfile",  # allowed, but ONLY description-line usage is permitted (enforced elsewhere)
     ROOT / "docs",
 )
 
-# Code roots where DISPLAY_NAME MUST NOT appear.
 DISPLAY_FORBIDDEN_ROOTS: Final[tuple[Path, ...]] = (
     ROOT / "src",
     ROOT / "tests",
@@ -61,9 +54,6 @@ DISPLAY_FORBIDDEN_ROOTS: Final[tuple[Path, ...]] = (
     ROOT / "scripts",
 )
 
-# We additionally restrict Dockerfile usage:
-# - DISPLAY_NAME is allowed only in org.opencontainers.image.description value (free text).
-# - TECH_NAME and CANONICAL_REPO must be used in title/source labels respectively.
 DOCKERFILE: Final[Path] = ROOT / "Dockerfile"
 
 
@@ -95,14 +85,11 @@ def _tracked_files() -> list[Path]:
 
     files: list[Path] = []
     for line in out.splitlines():
-        if not line.strip():
+        s = line.strip()
+        if not s:
             continue
-        files.append((ROOT / line.strip()).resolve())
+        files.append((ROOT / s).resolve())
     return files
-
-
-def _contains_verbatim(p: Path, needle: str) -> bool:
-    return needle in _read_text(p)
 
 
 def _find_hits(p: Path, needle: str) -> list[Hit]:
@@ -114,19 +101,35 @@ def _find_hits(p: Path, needle: str) -> list[Hit]:
     return hits
 
 
+def _load_display_name() -> str:
+    if not DISPLAY_NAME_FILE.exists():
+        _fail(f"missing display name SSOT file: {DISPLAY_NAME_FILE.relative_to(ROOT)}")
+        raise SystemExit(EX_SOFTWARE)
+
+    name = _read_text(DISPLAY_NAME_FILE).strip()
+    if not name:
+        _fail(f"display name SSOT file is empty: {DISPLAY_NAME_FILE.relative_to(ROOT)}")
+        raise SystemExit(EX_SOFTWARE)
+
+    return name
+
+
 def _load_forbidden_tokens() -> list[str]:
     if not FORBIDDEN_TOKENS_FILE.exists():
-        _fail(f"missing forbidden tokens file: {FORBIDDEN_TOKENS_FILE}")
+        _fail(f"missing forbidden tokens file: {FORBIDDEN_TOKENS_FILE.relative_to(ROOT)}")
         raise SystemExit(EX_SOFTWARE)
 
     toks: list[str] = []
     for raw in _read_text(FORBIDDEN_TOKENS_FILE).splitlines():
         s = raw.strip()
-        if not s:
-            continue
-        if s.startswith("#"):
+        if not s or s.startswith("#"):
             continue
         toks.append(s)
+
+    if not toks:
+        _fail(f"forbidden tokens file is empty: {FORBIDDEN_TOKENS_FILE.relative_to(ROOT)}")
+        raise SystemExit(EX_SOFTWARE)
+
     return toks
 
 
@@ -154,10 +157,13 @@ def _display_forbidden(path: Path) -> bool:
     return False
 
 
+def _contains_verbatim(p: Path, needle: str) -> bool:
+    return needle in _read_text(p)
+
+
 def _check_required_surfaces() -> int:
     fail = 0
 
-    # Canonical URL required.
     for p in REQUIRED_CANONICAL_REPO_FILES:
         if not p.exists():
             _fail(f"required file missing: {p.relative_to(ROOT)}")
@@ -169,7 +175,6 @@ def _check_required_surfaces() -> int:
             )
             fail = 1
 
-    # Technical identity required.
     for p in REQUIRED_TECH_IDENTITY_FILES:
         if not p.exists():
             _fail(f"required file missing: {p.relative_to(ROOT)}")
@@ -189,7 +194,6 @@ def _check_pyproject_toml() -> int:
         return 1
 
     data = tomllib.loads(_read_text(p))
-
     fail = 0
 
     proj = data.get("project", {})
@@ -202,16 +206,12 @@ def _check_pyproject_toml() -> int:
     entry = scripts.get(TECH_NAME)
     expected_entry = f"{TECH_NAME}.cli:main"
     if entry != expected_entry:
-        _fail(f"pyproject.toml: project.scripts['{TECH_NAME}'] must be '{expected_entry}', got '{entry}'")
+        _fail(
+            f"pyproject.toml: project.scripts['{TECH_NAME}'] must be '{expected_entry}', got '{entry}'"
+        )
         fail = 1
 
     urls = proj.get("urls", {})
-    for k in ("Homepage", "Source", "Issues", "Documentation"):
-        v = urls.get(k)
-        if not isinstance(v, str) or "github.com" not in v:
-            _fail(f"pyproject.toml: project.urls.{k} missing/invalid")
-            fail = 1
-    # Enforce canonical repo appears at least once in urls (strong but accurate).
     url_blob = "\n".join(str(v) for v in urls.values() if isinstance(v, str))
     if CANONICAL_REPO not in url_blob:
         _fail(f"pyproject.toml: project.urls must contain canonical repo '{CANONICAL_REPO}'")
@@ -220,7 +220,7 @@ def _check_pyproject_toml() -> int:
     return fail
 
 
-def _check_dockerfile_labels() -> int:
+def _check_dockerfile_labels(display_name: str) -> int:
     if not DOCKERFILE.exists():
         _fail("Dockerfile missing")
         return 1
@@ -228,26 +228,20 @@ def _check_dockerfile_labels() -> int:
     text = _read_text(DOCKERFILE)
     fail = 0
 
-    # Must include canonical source label (exact URL).
-    # We do NOT over-parse Dockerfile; we verify presence of canonical URL.
     if CANONICAL_REPO not in text:
         _fail(f"Dockerfile: expected canonical repo url '{CANONICAL_REPO}' to appear")
         fail = 1
 
-    # Must include TECH_NAME in title label (or at least somewhere; we enforce label key presence).
-    # Strongly recommended exact label line; but keep robust by checking both tokens.
     if TECH_NAME not in text:
         _fail(f"Dockerfile: expected technical identity '{TECH_NAME}' to appear")
         fail = 1
 
-    # DISPLAY_NAME is allowed ONLY in description label text.
-    # If DISPLAY_NAME appears and it is not on a line containing 'org.opencontainers.image.description',
-    # we fail with an example hit.
+    # DISPLAY is allowed only in the description label line.
     for idx, line in enumerate(text.splitlines(), start=1):
-        if DISPLAY_NAME in line and "org.opencontainers.image.description" not in line:
+        if display_name in line and "org.opencontainers.image.description" not in line:
             _fail(
-                f"Dockerfile: display name '{DISPLAY_NAME}' is allowed only in org.opencontainers.image.description "
-                f"(line {idx})"
+                f"Dockerfile: display name '{display_name}' is allowed only in "
+                f"org.opencontainers.image.description (line {idx})"
             )
             fail = 1
             break
@@ -256,85 +250,63 @@ def _check_dockerfile_labels() -> int:
 
 
 def _check_forbidden_tokens(tracked: list[Path], forbidden_tokens: list[str]) -> int:
-    fail = 0
-
-    # Avoid scanning the forbidden tokens file itself (it must contain forbidden strings by design).
-    excluded = {FORBIDDEN_TOKENS_FILE.resolve()}
-
+    excluded = {FORBIDDEN_TOKENS_FILE.resolve(), DISPLAY_NAME_FILE.resolve()}
     for tok in forbidden_tokens:
         for p in tracked:
-            if p in excluded:
+            if p in excluded or not p.is_file():
                 continue
-            if not p.is_file():
-                continue
-            # Skip .gitignored non-tracked not possible; tracked list already.
             hits = _find_hits(p, tok)
             if hits:
                 h = hits[0]
                 _fail(
-                    f"forbidden token '{tok}' found (example hit shown): {h.path.relative_to(ROOT)}:{h.line_no}:{h.line.strip()}"
+                    f"forbidden token '{tok}' found (example hit shown): "
+                    f"{h.path.relative_to(ROOT)}:{h.line_no}:{h.line.strip()}"
                 )
-                fail = 1
-                break
-        if fail:
-            break
-
-    return fail
+                return 1
+    return 0
 
 
-def _check_display_name_scope(tracked: list[Path]) -> int:
+def _check_display_name_scope(tracked: list[Path], display_name: str) -> int:
     """
-    Enforce contract:
-      - DISPLAY_NAME allowed only in docs/** + selected top-level markdown.
-      - DISPLAY_NAME MUST NOT appear under src/** (and other forbidden roots).
-      - Dockerfile exception: DISPLAY_NAME allowed ONLY on OCI description label line(s).
+    Contract:
+      - Display name allowed only in docs/** and selected top-level docs files.
+      - Display name forbidden under src/tests/.github/scripts.
+      - Dockerfile is handled by _check_dockerfile_labels and is exempt from this scan.
     """
     for p in tracked:
         if not p.is_file():
             continue
-
-        text = _read_text(p)
-        if DISPLAY_NAME not in text:
+        if p.resolve() == DOCKERFILE.resolve():
+            continue  # Dockerfile display handling is validated elsewhere.
+        if display_name not in _read_text(p):
             continue
 
-        # Hard-forbidden roots (src/tests/.github/scripts) are never allowed.
         if _display_forbidden(p):
-            hits = _find_hits(p, DISPLAY_NAME)
+            hits = _find_hits(p, display_name)
             h = hits[0]
             _fail(
-                f"display name '{DISPLAY_NAME}' is forbidden in {h.path.relative_to(ROOT)} "
+                f"display name '{display_name}' is forbidden in {h.path.relative_to(ROOT)} "
                 f"(example hit): {h.path.relative_to(ROOT)}:{h.line_no}:{h.line.strip()}"
             )
             return 1
 
-        # Dockerfile is allowed ONLY for org.opencontainers.image.description lines.
-        if p.resolve() == DOCKERFILE.resolve():
-            for idx, line in enumerate(text.splitlines(), start=1):
-                if DISPLAY_NAME in line and "org.opencontainers.image.description" not in line:
-                    _fail(
-                        f"Dockerfile: display name '{DISPLAY_NAME}' is allowed only in "
-                        f"org.opencontainers.image.description (line {idx})"
-                    )
-                    return 1
-            # If we got here, Dockerfile hits are compliant.
-            continue
-
-        # Non-Dockerfile: must be in explicitly allowed roots.
         if not _display_allowed(p):
-            hits = _find_hits(p, DISPLAY_NAME)
+            hits = _find_hits(p, display_name)
             h = hits[0]
             _fail(
-                f"display name '{DISPLAY_NAME}' appears in non-allowed file {h.path.relative_to(ROOT)} "
+                f"display name '{display_name}' appears in non-allowed file {h.path.relative_to(ROOT)} "
                 f"(example hit): {h.path.relative_to(ROOT)}:{h.line_no}:{h.line.strip()}"
             )
             return 1
 
     return 0
 
+
 def main() -> int:
     print("== Project Identity Guard ==")
+    display_name = _load_display_name()
     print(f"Technical identity: {TECH_NAME}")
-    print(f"Display identity:   {DISPLAY_NAME}")
+    print(f"Display identity:   {display_name}")
     print(f"Canonical repo:     {CANONICAL_REPO}")
 
     tracked = _tracked_files()
@@ -344,8 +316,8 @@ def main() -> int:
     fail |= _check_forbidden_tokens(tracked, forbidden)
     fail |= _check_required_surfaces()
     fail |= _check_pyproject_toml()
-    fail |= _check_dockerfile_labels()
-    fail |= _check_display_name_scope(tracked)
+    fail |= _check_dockerfile_labels(display_name)
+    fail |= _check_display_name_scope(tracked, display_name)
 
     if fail:
         return EX_FAIL

@@ -103,3 +103,8 @@ docs/diagrams/*.pdf
 
 # ---- Governance scratch ----
 commits.txt
+# ---- Local snapshots / objectives (never commit) ----
+docs/objective/
+docs/governance/PROJECT_SNAPSHOT_V1_*.md
+# ---- Local planning / scratch (never commit) ----
+docs/objective/
