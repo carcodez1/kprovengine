@@ -14,6 +14,7 @@ concurrency:
 
 jobs:
   gitleaks:
+    name: gitleaks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,7 +24,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  artifact-guard:
+  artifact_guard:
+    name: artifact-guard
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
