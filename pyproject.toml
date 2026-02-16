@@ -32,9 +32,7 @@ classifiers = [
   "Topic :: Security",
 ]
 
-dependencies = [
-  "click>=8.1",
-]
+dependencies = []
 
 [project.optional-dependencies]
 dev = [
