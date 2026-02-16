@@ -33,7 +33,6 @@ classifiers = [
 ]
 
 dependencies = []
-
 [project.optional-dependencies]
 dev = [
   "pytest>=8.0",
@@ -41,6 +40,8 @@ dev = [
   "pre-commit>=3.7",
   "build>=1.2",
   "tox>=4.0",
+  "pyright>=1.1.390",
+  "jsonschema>=4.22",
 ]
 
 [project.urls]
