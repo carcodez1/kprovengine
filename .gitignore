@@ -111,3 +111,7 @@ docs/objective/
 
 # Runtime logs
 logs/
+
+# SBOM outputs
+/dist/*.spdx.json
+/dist/*.cdx.json
