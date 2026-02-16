@@ -132,7 +132,7 @@ precommit: install
 tox: install
 	@$(PY) -m tox
 
-preflight: lint test build artifacts identity precommit
+preflight: lint test build artifacts identity precommit sbom
 	@echo "OK: preflight passed"
 
 docker-local:
@@ -145,6 +145,10 @@ distclean: clean
 	@rm -rf "$(VENV)"
 
 all: preflight
+
+
+sbom: build
+	@bash scripts/sbom.sh
 # ======================================================================
 # END OF FILE
 # ======================================================================

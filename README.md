@@ -79,6 +79,21 @@ This is infrastructure, not a demo framework.
 - Validated locally and in CI
 - Fail-closed enforcement
 
+#
+
+unset -f pip python 2>/dev/null || true
+unalias pip python 2>/dev/null || true
+export VIRTUAL_ENV="$PWD/.venv"
+export PATH="$VIRTUAL_ENV/bin:$PATH"
+hash -r
+python -V
+pip -V
+pip install -e ".[dev]"
+
+./.venv/bin/python -m pip ...
+
+make preflight
+
 ### 4. CI Parity
 
 Local:

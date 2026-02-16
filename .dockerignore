@@ -1,0 +1,42 @@
+# VCS / CI
+
+.git
+.github
+
+# Local env / secrets
+
+.venv
+.env
+.env.\*
+\*.env
+
+# Python bytecode / caches
+
+**pycache**/
+_.pyc
+_.pyo
+\*.pyd
+
+# Python build/test artifacts
+
+dist/
+build/
+\*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Project artifact hygiene surfaces
+
+runs/
+demo_runs/
+docs/objective/
+\*.log
+
+# OS/editor noise
+
+.DS_Store
+.vscode/
+.idea/
