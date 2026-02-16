@@ -1,5 +1,12 @@
 # kprovengine
 
+## Status
+
+![CI](https://github.com/carcodez1/kprovengine/actions/workflows/ci.yml/badge.svg)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue)
+
+Supported Python: `>=3.11,<3.13`
 Deterministic provenance and governance scaffolding for evidence-ready pipelines.
 
 kprovengine V1 is a governance-locked open-source core focused on deterministic execution, runtime policy enforcement, artifact hygiene, and identity surface control.
@@ -21,16 +28,6 @@ kprovengine V1 is a governance-locked open-source core focused on deterministic 
 - [Scope Boundaries (V1)](#scope-boundaries-v1)
 - [Roadmap](#roadmap)
 - [License](#license)
-
----
-
-## Status
-
-![CI](https://github.com/carcodez1/kprovengine/actions/workflows/ci.yml/badge.svg)
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue)
-
-Supported Python: `>=3.11,<3.13`
 
 ---
 
