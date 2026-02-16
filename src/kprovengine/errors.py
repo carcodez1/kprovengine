@@ -1,17 +1,13 @@
 from __future__ import annotations
 
 
-class KProvError(Exception):
-    """Base exception for KProvEngine."""
+class KprovError(Exception):
+    """Base exception for the kprovengine core."""
 
 
-class ConfigError(KProvError):
-    """Invalid configuration or arguments."""
+class ConfigError(KprovError):
+    """Configuration or invocation error."""
 
 
-class AdapterError(KProvError):
-    """Adapter failure (OCR/LLM/etc)."""
-
-
-class EvidenceError(KProvError):
-    """Evidence bundle generation/validation failure."""
+class PipelineError(KprovError):
+    """Pipeline execution error."""
