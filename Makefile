@@ -181,7 +181,11 @@ precommit: install
 tox: install
 	@$(PY) -m tox
 
-preflight: lint test build artifacts identity precommit sbom
+doctor: verify-tools
+	@$(call ASSERT_FILE,$(DOCTOR_SH))
+	@bash "$(DOCTOR_SH)"
+
+preflight: lint cov build sbom sign attest artifacts identity precommit
 	@echo "OK: preflight passed"
 
 docker-local:
@@ -195,9 +199,6 @@ distclean: clean
 
 all: preflight
 
-
-sbom: build
-	@bash scripts/sbom.sh
 # ======================================================================
 # END OF FILE
 # ======================================================================
