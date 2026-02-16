@@ -108,3 +108,6 @@ docs/objective/
 docs/governance/PROJECT_SNAPSHOT_V1_*.md
 # ---- Local planning / scratch (never commit) ----
 docs/objective/
+
+# Runtime logs
+logs/
