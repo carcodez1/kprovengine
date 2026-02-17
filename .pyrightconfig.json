@@ -1,0 +1,19 @@
+{
+  "venvPath": ".",
+  "venv": ".venv",
+  "pythonVersion": "3.11",
+  "typeCheckingMode": "strict",
+  "reportMissingTypeStubs": "error",
+  "reportUnknownMemberType": "error",
+  "reportUnknownArgumentType": "error",
+  "reportUnknownVariableType": "error",
+  "reportUnknownParameterType": "error",
+  "reportUnknownLambdaType": "error",
+  "reportUntypedFunctionDecorator": "error",
+  "reportUntypedBaseClass": "error",
+  "reportImplicitOverride": "error",
+  "reportImplicitStringConcatenation": "error",
+  "reportPropertyTypeMismatch": "error",
+  "include": ["src", "tests", "scripts"],
+  "exclude": ["dist", "build", ".venv", ".tox"]
+}

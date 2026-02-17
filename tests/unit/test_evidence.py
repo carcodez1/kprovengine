@@ -40,17 +40,16 @@ def test_attestation_fields() -> None:
 def test_toolchain_basic() -> None:
     t = Toolchain.basic()
 
-    assert hasattr(t, "python_version")
-    assert hasattr(t, "platform")
+    assert isinstance(t.python_version, str) and t.python_version
+    assert isinstance(t.python_implementation, str) and t.python_implementation
+    assert isinstance(t.platform_system, str) and t.platform_system
+    assert isinstance(t.platform_release, str) and t.platform_release
+    assert isinstance(t.platform_machine, str) and t.platform_machine
 
-    # sys.version typically does not include the literal word "Python".
-    # Require a version-like token and that it matches the running interpreter.
     version_token = t.python_version.split()[0]
-    assert "." in version_token
     assert version_token == sys.version.split()[0]
 
-    assert isinstance(t.platform, str)
-    assert t.packages is None  # V1: no packages list by default
+    assert t.packages is None  # V1 default
 
 
 def test_provenance_record_from_paths(tmp_path: Path) -> None:
@@ -58,7 +57,7 @@ def test_provenance_record_from_paths(tmp_path: Path) -> None:
     outputs = [tmp_path / "out.txt"]
 
     for p in inputs + outputs:
-        p.write_text("dummy")
+        p.write_text("dummy", encoding="utf-8")
 
     pr = ProvenanceRecord.from_paths("run0", inputs, outputs)
 
