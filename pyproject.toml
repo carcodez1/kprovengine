@@ -37,10 +37,13 @@ dependencies = []
 [project.optional-dependencies]
 dev = [
   "pytest>=8.0",
+  "pytest-cov>=5.0",
   "ruff>=0.6.0",
   "pre-commit>=3.7",
   "build>=1.2",
   "tox>=4.0",
+  "pyright>=1.1.390",
+  "jsonschema>=4.22",
 ]
 
 [project.urls]
@@ -73,3 +76,22 @@ ignore = ["E501"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.coverage.run]
+branch = true
+source = ["kprovengine"]
+omit = [
+  "src/kprovengine/adapters/llm_langchain.py",
+  "src/kprovengine/adapters/llm_ollama.py",
+  "src/kprovengine/adapters/ocr_easyocr.py",
+  "src/kprovengine/adapters/ocr_tesseract.py",
+]
+
+[tool.coverage.report]
+fail_under = 85
+show_missing = true
+skip_empty = true
+precision = 2
+
+[tool.coverage.xml]
+output = "coverage.xml"
