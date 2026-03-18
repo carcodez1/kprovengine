@@ -19,6 +19,11 @@ repos:
           #   args: ["--config=pyproject.toml", "--fix"]
     - repo: local
       hooks:
+          - id: codex-surface
+            name: codex surface validation
+            entry: python3 scripts/validate_codex_surface.py
+            language: system
+            pass_filenames: false
           - id: makefile-safety
             name: makefile safety (no heredocs)
             entry: bash scripts/check_makefile_safety.sh
