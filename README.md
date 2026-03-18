@@ -274,7 +274,9 @@ Excluded intentionally:
 
 - Enterprise compliance adapters
 - Policy-as-code engines
-- Signed artifact infrastructure
+- Signed artifacpython3.12 -m venv .venv
+source .venv/bin/activate
+python -Vt infrastructure
 - External audit integrations
 - SaaS multi-tenant features
 

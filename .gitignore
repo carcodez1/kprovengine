@@ -118,3 +118,7 @@ logs/
 
 # Local GitHub ruleset payloads (do not commit)
 /ruleset*.json
+cosign.key
+cosign.pub
+in.txt
+report.txt
