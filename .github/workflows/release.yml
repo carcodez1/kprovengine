@@ -46,11 +46,53 @@ jobs:
       - name: Install cosign
         uses: sigstore/cosign-installer@v3
 
-      - name: Sign dist artifacts (keyless)
+      - name: Sign dist artifacts (keyless, bundle format)
         run: |
           bash scripts/sign.sh dist
 
+      - name: Verify signatures (keyless, GitHub Actions OIDC)
+        shell: bash
+        run: |
+          set -euo pipefail
+          DIST_DIR="dist"
+          shopt -s nullglob
+
+          artifacts=(
+            "${DIST_DIR}"/*.whl
+            "${DIST_DIR}"/*.tar.gz
+            "${DIST_DIR}"/*.spdx.json
+            "${DIST_DIR}"/*.cdx.json
+          )
+
+          if [ "${#artifacts[@]}" -eq 0 ]; then
+            echo "FAIL: no artifacts found in ${DIST_DIR}/" >&2
+            exit 1
+          fi
+
+          ISSUER="https://token.actions.githubusercontent.com"
+
+          WF_REF="${GITHUB_WORKFLOW_REF:-}"
+          if [ -z "${WF_REF}" ]; then
+            echo "FAIL: GITHUB_WORKFLOW_REF is empty; cannot verify identity deterministically" >&2
+            exit 1
+          fi
+
+          ID_RE="^https://github.com/${WF_REF//\//\\/}.*$"
+
+          for f in "${artifacts[@]}"; do
+            cosign verify-blob \
+              --bundle "${f}.bundle" \
+              --certificate-identity-regexp "${ID_RE}" \
+              --certificate-oidc-issuer "${ISSUER}" \
+              "${f}"
+          done
+
+          echo "OK: verified all dist artifacts via bundles"
+
       - name: Verify local policy (attest gate)
+        env:
+          COSIGN_OIDC_ISSUER: "https://token.actions.githubusercontent.com"
+          COSIGN_IDENTITY_REGEXP: "^https://github.com/${{ github.workflow_ref }}.*$"
         run: |
           bash scripts/attest.sh dist
 
@@ -58,4 +100,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: dist
-          path: dist/*
+          path: dist

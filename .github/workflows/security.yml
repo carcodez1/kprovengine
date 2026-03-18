@@ -16,19 +16,28 @@ jobs:
   gitleaks:
     name: gitleaks
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: gitleaks/gitleaks-action@v2
+
+      - name: Gitleaks
+        uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   artifact_guard:
     name: artifact-guard
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
-      - name: Forbid tracked artifacts
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Forbid tracked artifacts (canonical)
         run: |
-          bash scripts/forbid_tracked_artifacts.sh
+          bash scripts/check_tracked_artifacts.sh

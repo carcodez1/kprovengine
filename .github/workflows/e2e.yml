@@ -1,0 +1,202 @@
+name: e2e
+
+on:
+  pull_request:
+  push:
+    branches: ["main"]
+    tags:
+      - "v*"
+
+# Workflow-level minimal; jobs elevate only when required.
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: ci (lint+tests+coverage+governance)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: true
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install (dev)
+        run: |
+          python -m pip install -U pip
+          python -m pip install -e ".[dev]"
+          python -m pip install -U build
+
+      - name: Python version policy (>=3.11,<3.13)
+        if: ${{ matrix.python-version == '3.12' }}
+        run: |
+          python scripts/check_venv_python.py --min 3.11 --max-excl 3.13
+
+      - name: Lint (ruff)
+        if: ${{ matrix.python-version == '3.12' }}
+        run: |
+          python -m ruff check .
+
+      - name: Tests + coverage (fail-under=85)
+        run: |
+          python -m pytest -q \
+            --cov=kprovengine \
+            --cov-branch \
+            --cov-report=term-missing \
+            --cov-report=xml:coverage.xml \
+            --cov-report=html:htmlcov \
+            --cov-fail-under=85
+
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-py${{ matrix.python-version }}
+          path: |
+            coverage.xml
+            htmlcov/**
+
+      - name: Identity guard
+        if: ${{ matrix.python-version == '3.12' }}
+        run: |
+          python scripts/check_project_identity.py
+
+      - name: Artifact guard (tracked)
+        if: ${{ matrix.python-version == '3.12' }}
+        run: |
+          bash scripts/check_tracked_artifacts.sh
+
+      - name: Pre-commit
+        if: ${{ matrix.python-version == '3.12' }}
+        run: |
+          python -m pre_commit run --all-files
+
+  dist_supplychain:
+    name: dist + sbom + provenance + signing (tags only)
+    runs-on: ubuntu-latest
+    needs: [ci]
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install build tooling
+        run: |
+          python -m pip install -U pip
+          python -m pip install build
+
+      - name: Install syft
+        run: |
+          set -euo pipefail
+          if command -v syft >/dev/null 2>&1; then
+            syft version
+            exit 0
+          fi
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh \
+            | sh -s -- -b /usr/local/bin
+          syft version
+
+      - name: Build dist
+        run: |
+          rm -rf dist
+          python -m build -q
+
+      - name: Generate SBOMs (syft)
+        run: |
+          bash scripts/sbom.sh
+
+      - name: Attest build provenance (dist/*)
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: "dist/*"
+
+      - name: Verify GitHub build provenance attestations (consumer check)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh --version
+          ls -1 dist/*.whl >/dev/null
+          gh attestation verify dist/*.whl --repo "${GITHUB_REPOSITORY}"
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Sign dist artifacts (keyless, bundle format)
+        run: |
+          bash scripts/sign.sh dist
+
+      - name: Verify signatures (keyless, GitHub Actions OIDC)
+        shell: bash
+        run: |
+          set -euo pipefail
+          DIST_DIR="dist"
+          shopt -s nullglob
+
+          artifacts=(
+            "${DIST_DIR}"/*.whl
+            "${DIST_DIR}"/*.tar.gz
+            "${DIST_DIR}"/*.spdx.json
+            "${DIST_DIR}"/*.cdx.json
+          )
+
+          if [ "${#artifacts[@]}" -eq 0 ]; then
+            echo "FAIL: no artifacts found in ${DIST_DIR}/" >&2
+            exit 1
+          fi
+
+          ISSUER="https://token.actions.githubusercontent.com"
+          WF_REF="${{ github.workflow_ref }}"
+          if [ -z "${WF_REF}" ]; then
+            echo "FAIL: github.workflow_ref is empty" >&2
+            exit 1
+          fi
+          ID_RE="^https://github.com/${WF_REF//\//\\/}.*$"
+
+          for f in "${artifacts[@]}"; do
+            echo "Verifying bundle: ${f}"
+            cosign verify-blob \
+              --bundle "${f}.bundle" \
+              --certificate-identity-regexp "${ID_RE}" \
+              --certificate-oidc-issuer "${ISSUER}" \
+              "${f}" >/dev/null
+          done
+
+          echo "OK: verified all dist artifacts via bundles"
+
+      - name: Verify local policy (attest gate)
+        env:
+          COSIGN_OIDC_ISSUER: "https://token.actions.githubusercontent.com"
+          COSIGN_IDENTITY_REGEXP: "^https://github.com/${{ github.workflow_ref }}.*$"
+        run: |
+          bash scripts/attest.sh dist
+
+      - name: Upload dist artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: |
+            dist/**
