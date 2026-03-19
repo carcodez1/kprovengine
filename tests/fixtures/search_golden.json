@@ -1,0 +1,43 @@
+{
+  "queries": [
+    {
+      "query_id": "q_sha",
+      "query": "sha256:aaa111"
+    },
+    {
+      "query_id": "q_compliance",
+      "query": "run:run-001 compliance"
+    },
+    {
+      "query_id": "q_output",
+      "query": "run:run-002 type:output"
+    }
+  ],
+  "judgments": [
+    {
+      "query_id": "q_sha",
+      "doc_id": "run-001:provenance.json",
+      "relevance": 3
+    },
+    {
+      "query_id": "q_compliance",
+      "doc_id": "run-001:provenance.json",
+      "relevance": 2
+    },
+    {
+      "query_id": "q_compliance",
+      "doc_id": "run-001:sbom.json",
+      "relevance": 3
+    },
+    {
+      "query_id": "q_compliance",
+      "doc_id": "run-001:outputs/report.txt",
+      "relevance": 1
+    },
+    {
+      "query_id": "q_output",
+      "doc_id": "run-002:outputs/report.txt",
+      "relevance": 2
+    }
+  ]
+}
