@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 EvidenceMode = Literal["DISABLED", "ENABLED"]
 HumanReviewStatus = Literal["PENDING", "APPROVED", "REJECTED"]
@@ -39,4 +39,4 @@ class RunResult:
     run_dir: Path
     outputs: list[Path]
     evidence_dir: Path | None
-    summary: dict[str, str]
+    summary: dict[str, Any]

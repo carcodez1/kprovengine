@@ -16,8 +16,8 @@ class HumanReview:
     timestamp: str
 
     @classmethod
-    def pending(cls) -> HumanReview:
-        return cls(status="PENDING", reviewer=None, timestamp=_now_utc_iso())
+    def pending(cls, *, timestamp: str | None = None) -> HumanReview:
+        return cls(status="PENDING", reviewer=None, timestamp=timestamp or _now_utc_iso())
 
     def to_dict(self) -> dict[str, Any]:
         return {"status": self.status, "reviewer": self.reviewer, "timestamp": self.timestamp}
