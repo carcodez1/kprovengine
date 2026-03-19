@@ -32,14 +32,24 @@ SBOM_SH           := scripts/sbom.sh
 SIGN_SH           := scripts/sign.sh
 ATTEST_SH         := scripts/attest.sh
 DOCTOR_SH         := scripts/doctor.sh
+DCO_CHECK_PY      := scripts/check_dco.py
+CHANGESET_GEN_PY  := scripts/generate_changeset_manifest.py
+CHANGESET_VER_PY  := scripts/verify_changeset_manifest.py
 
 DIST_DIR ?= dist
+DCO_BASE ?= HEAD~1
+DCO_HEAD ?= HEAD
+CHANGESET_BASE ?= HEAD~1
+CHANGESET_HEAD ?= HEAD
+CHANGESET_MANIFEST ?= changeset-manifest.json
+CHANGESET_GENERATED_AT ?=
 
 # Coverage policy: fail hard if below threshold
 COV_FAIL_UNDER ?= 85
 
 .PHONY: help env venv venv-policy install lint test cov build sbom sign attest \
         artifacts identity precommit tox preflight doctor docker-local \
+        dco-check changeset-manifest changeset-verify \
         clean distclean all verify-tools
 
 help:
@@ -61,6 +71,9 @@ help:
 	"  precommit      Run pre-commit on all files (in venv)" \
 	"  tox            Run tox via venv (py311/py312/lint matrix)" \
 	"  doctor         Environment + build + sbom smoke checks" \
+	"  dco-check      Validate Signed-off-by trailers across commit range" \
+	"  changeset-manifest Generate deterministic changeset-manifest.json" \
+	"  changeset-verify Verify changeset-manifest.json integrity" \
 	"  preflight      lint + cov + build + sbom + sign + attest + artifacts + identity + precommit" \
 	"  docker-local   Build local OCI image tag kprovengine:local" \
 	"  clean          Remove build/test artifacts (keeps venv)" \
@@ -91,6 +104,15 @@ env:
 	@echo "SIGN_SH=$(SIGN_SH)"
 	@echo "ATTEST_SH=$(ATTEST_SH)"
 	@echo "DOCTOR_SH=$(DOCTOR_SH)"
+	@echo "DCO_CHECK_PY=$(DCO_CHECK_PY)"
+	@echo "CHANGESET_GEN_PY=$(CHANGESET_GEN_PY)"
+	@echo "CHANGESET_VER_PY=$(CHANGESET_VER_PY)"
+	@echo "DCO_BASE=$(DCO_BASE)"
+	@echo "DCO_HEAD=$(DCO_HEAD)"
+	@echo "CHANGESET_BASE=$(CHANGESET_BASE)"
+	@echo "CHANGESET_HEAD=$(CHANGESET_HEAD)"
+	@echo "CHANGESET_MANIFEST=$(CHANGESET_MANIFEST)"
+	@echo "CHANGESET_GENERATED_AT=$(CHANGESET_GENERATED_AT)"
 
 define ASSERT_BOOTSTRAP
 	command -v "$(PYTHON_BOOTSTRAP)" >/dev/null 2>&1 || ( \
@@ -184,6 +206,22 @@ tox: install
 doctor: verify-tools
 	@$(call ASSERT_FILE,$(DOCTOR_SH))
 	@bash "$(DOCTOR_SH)"
+
+dco-check: venv
+	@$(call ASSERT_FILE,$(DCO_CHECK_PY))
+	@$(PY) "$(DCO_CHECK_PY)" --base "$(DCO_BASE)" --head "$(DCO_HEAD)"
+
+changeset-manifest: venv
+	@$(call ASSERT_FILE,$(CHANGESET_GEN_PY))
+	@args=(--base "$(CHANGESET_BASE)" --head "$(CHANGESET_HEAD)" --output "$(CHANGESET_MANIFEST)"); \
+	if [ -n "$(CHANGESET_GENERATED_AT)" ]; then \
+		args+=(--generated-at "$(CHANGESET_GENERATED_AT)"); \
+	fi; \
+	$(PY) "$(CHANGESET_GEN_PY)" "$${args[@]}"
+
+changeset-verify: venv
+	@$(call ASSERT_FILE,$(CHANGESET_VER_PY))
+	@$(PY) "$(CHANGESET_VER_PY)" --manifest "$(CHANGESET_MANIFEST)"
 
 preflight: lint cov build sbom sign attest artifacts identity precommit
 	@echo "OK: preflight passed"

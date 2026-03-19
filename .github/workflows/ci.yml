@@ -91,12 +91,31 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
+
+      - name: DCO check
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PUSH_BASE_SHA: ${{ github.event.before }}
+          PUSH_HEAD_SHA: ${{ github.sha }}
+        run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            BASE_SHA="$PR_BASE_SHA"
+            HEAD_SHA="$PR_HEAD_SHA"
+          else
+            BASE_SHA="$PUSH_BASE_SHA"
+            HEAD_SHA="$PUSH_HEAD_SHA"
+          fi
+          python scripts/check_dco.py --base "$BASE_SHA" --head "$HEAD_SHA"
 
       - name: Install (dev)
         run: |
@@ -127,6 +146,14 @@ jobs:
       - name: Artifact guard (tracked)
         run: |
           bash scripts/check_tracked_artifacts.sh
+
+      - name: Verify changeset manifest (if present)
+        run: |
+          if [ -f changeset-manifest.json ]; then
+            python scripts/verify_changeset_manifest.py --manifest changeset-manifest.json
+          else
+            echo "No changeset-manifest.json present; skipping verification."
+          fi
 
       - name: Pre-commit
         run: |
