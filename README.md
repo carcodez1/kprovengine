@@ -11,6 +11,8 @@ Deterministic provenance and governance scaffolding for evidence-ready pipelines
 
 kprovengine V1 is a governance-locked open-source core focused on deterministic execution, runtime policy enforcement, artifact hygiene, and identity surface control.
 
+AI-assisted outputs reproducible, traceable, reviewable, and governable instead of treating model output as an unverified black box.
+
 ---
 
 ## Table of Contents
